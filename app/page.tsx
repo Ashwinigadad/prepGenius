@@ -4,6 +4,7 @@ export default function Home() {
     <div>hi
       <br />
       <Button>Button</Button>
+<h1>hello world</h1>
     </div>
 
   );
