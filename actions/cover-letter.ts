@@ -4,10 +4,18 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-export async function generateCoverLetter(data) {
+// Define the input type
+interface CoverLetterInput {
+  jobTitle: string;
+  companyName: string;
+  jobDescription: string;
+}
+
+// Generate cover letter
+export async function generateCoverLetter(data: CoverLetterInput) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -18,9 +26,7 @@ export async function generateCoverLetter(data) {
   if (!user) throw new Error("User not found");
 
   const prompt = `
-    Write a professional cover letter for a ${data.jobTitle} position at ${
-    data.companyName
-  }.
+    Write a professional cover letter for a ${data.jobTitle} position at ${data.companyName}.
     
     About the candidate:
     - Industry: ${user.industry}
@@ -59,12 +65,13 @@ export async function generateCoverLetter(data) {
     });
 
     return coverLetter;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating cover letter:", error.message);
     throw new Error("Failed to generate cover letter");
   }
 }
 
+// Get all cover letters for the logged-in user
 export async function getCoverLetters() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
@@ -85,7 +92,8 @@ export async function getCoverLetters() {
   });
 }
 
-export async function getCoverLetter(id) {
+// Get a specific cover letter by ID
+export async function getCoverLetter(id: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -103,7 +111,8 @@ export async function getCoverLetter(id) {
   });
 }
 
-export async function deleteCoverLetter(id) {
+// Delete a cover letter
+export async function deleteCoverLetter(id: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
