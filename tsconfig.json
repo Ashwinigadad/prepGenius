@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/(auth)/layout.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/(auth)/layout.js", "app/(main)/ai-cover-letter/_components/cover-letter-generator.jsx", "app/(main)/ai-cover-letter/_components/cover-letter-list.jsx", "app/(main)/ai-cover-letter/_components/cover-letter-preview.jsx"],
   "exclude": ["node_modules"]
 }
