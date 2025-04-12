@@ -5,7 +5,15 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { generateAIInsights } from "./dashboard";
 
-export async function updateUser(data) {
+// Define types for the data argument (you may want to replace `any` with a more specific type)
+interface UpdateUserData {
+  industry: string;
+  experience: number | null;
+  bio: string | null;
+  skills: string[];
+}
+
+export async function updateUser(data: UpdateUserData) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -30,7 +38,7 @@ export async function updateUser(data) {
         if (!industryInsight) {
           const insights = await generateAIInsights(data.industry);
 
-          industryInsight = await db.industryInsight.create({
+          industryInsight = await tx.industryInsight.create({
             data: {
               industry: data.industry,
               ...insights,
@@ -60,8 +68,8 @@ export async function updateUser(data) {
     );
 
     revalidatePath("/");
-    return result.user;
-  } catch (error) {
+    return result.updatedUser; // Access `updatedUser` here
+  } catch (error:any) {
     console.error("Error updating user and industry:", error.message);
     throw new Error("Failed to update profile");
   }
@@ -78,7 +86,7 @@ export async function getUserOnboardingStatus() {
   if (!user) throw new Error("User not found");
 
   try {
-    const user = await db.user.findUnique({
+    const userWithIndustry = await db.user.findUnique({
       where: {
         clerkUserId: userId,
       },
@@ -88,7 +96,7 @@ export async function getUserOnboardingStatus() {
     });
 
     return {
-      isOnboarded: !!user?.industry,
+      isOnboarded: !!userWithIndustry?.industry,
     };
   } catch (error) {
     console.error("Error checking onboarding status:", error);
