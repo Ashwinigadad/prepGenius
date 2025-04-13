@@ -5,10 +5,16 @@ import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from "next/cache";
 
+// Check for GEMINI API key
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("Missing Gemini API key");
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-export async function saveResume(content) {
+// Save or update resume
+export async function saveResume(content: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -40,6 +46,7 @@ export async function saveResume(content) {
   }
 }
 
+// Get resume content
 export async function getResume() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
@@ -57,7 +64,10 @@ export async function getResume() {
   });
 }
 
-export async function improveWithAI({ current, type }) {
+// Improve resume section with Gemini AI
+export async function improveWithAI(params: { current: string; type: string }) {
+  const { current, type } = params;
+
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -70,8 +80,10 @@ export async function improveWithAI({ current, type }) {
 
   if (!user) throw new Error("User not found");
 
+  const industry = user.industry || "general";
+
   const prompt = `
-    As an expert resume writer, improve the following ${type} description for a ${user.industry} professional.
+    As an expert resume writer, improve the following ${type} description for a ${industry} professional.
     Make it more impactful, quantifiable, and aligned with industry standards.
     Current content: "${current}"
 
@@ -82,14 +94,16 @@ export async function improveWithAI({ current, type }) {
     4. Keep it concise but detailed
     5. Focus on achievements over responsibilities
     6. Use industry-specific keywords
-    
-    Format the response as a single paragraph without any additional text or explanations.
+
+    Respond strictly with the rewritten content only, no preamble or explanations.
+    Format the response as a single paragraph.
   `;
 
   try {
     const result = await model.generateContent(prompt);
     const response = result.response;
     const improvedContent = response.text().trim();
+
     return improvedContent;
   } catch (error) {
     console.error("Error improving content:", error);
