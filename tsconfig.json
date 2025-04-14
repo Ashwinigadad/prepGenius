@@ -37,7 +37,7 @@
     "app/(main)/ai-cover-letter/_components/cover-letter-generator.jsx",
     "app/(main)/ai-cover-letter/_components/cover-letter-list.jsx",
     "app/(main)/ai-cover-letter/_components/cover-letter-preview.jsx"
-  ],
+, "app/(main)/resume/_components/entry-form.jsx", "app/(main)/resume/_components/resume-builder.jsx"  ],
   "exclude": [
     "node_modules"
   ]
