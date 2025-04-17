@@ -4,15 +4,13 @@ import { Button } from "@/components/ui/button";
 import { getCoverLetter } from "@/actions/cover-letter";
 import CoverLetterPreview from "../_components/cover-letter-preview";
 
-type EditCoverLetterPageProps = {
-    params: {
-      id: string;
-    };
-  };
-
-export default async function EditCoverLetterPage({ params}:EditCoverLetterPageProps) {
-  const { id } = await params;
-  const coverLetter = await getCoverLetter(id);
+// ✅ Define props inline
+export default async function EditCoverLetterPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const coverLetter = await getCoverLetter(params.id);
 
   return (
     <div className="container mx-auto py-6">
@@ -29,7 +27,7 @@ export default async function EditCoverLetterPage({ params}:EditCoverLetterPageP
         </h1>
       </div>
 
-      <CoverLetterPreview content={coverLetter?.content} />
-    </div>
+      <CoverLetterPreview content={coverLetter?.content ?? ""} />
+      </div>
   );
 }

@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/accordion";
 import {
   ArrowRight,
-  Trophy,
-  Target,
-  Sparkles,
-  CheckCircle2,
+  // Trophy,
+  // Target,
+  // Sparkles,
+  // CheckCircle2,
 } from "lucide-react";
 import { testimonial } from "@/data/testimonial";
 import { faqs } from "@/data/faqs";

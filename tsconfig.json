@@ -34,9 +34,9 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "app/(auth)/layout.js",
-    "app/(main)/ai-cover-letter/_components/cover-letter-generator.jsx",
-    "app/(main)/ai-cover-letter/_components/cover-letter-list.jsx",
-    "app/(main)/ai-cover-letter/_components/cover-letter-preview.jsx"
+    "app/(main)/ai-cover-letter/_components/cover-letter-generator.tsx",
+    "app/(main)/ai-cover-letter/_components/cover-letter-list.tsx",
+    "app/(main)/ai-cover-letter/_components/cover-letter-preview.tsx"
 , "app/(main)/resume/_components/entry-form.jsx", "app/(main)/resume/_components/resume-builder.jsx"  ],
   "exclude": [
     "node_modules"

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Edit2, Eye, Trash2 } from "lucide-react";
+import {  Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Card,
@@ -25,16 +25,31 @@ import {
 } from "@/components/ui/alert-dialog";
 import { deleteCoverLetter } from "@/actions/cover-letter";
 
-export default function CoverLetterList({ coverLetters }) {
+// ✅ Define the type of a single cover letter
+type CoverLetter = {
+  id: string;
+  jobTitle: string;
+  companyName: string;
+  jobDescription: string;
+  createdAt: string | Date;
+};
+
+// ✅ Props for the component
+type CoverLetterListProps = {
+  coverLetters: CoverLetter[];
+};
+
+export default function CoverLetterList({ coverLetters }: CoverLetterListProps) {
   const router = useRouter();
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     try {
       await deleteCoverLetter(id);
       toast.success("Cover letter deleted successfully!");
       router.refresh();
-    } catch (error) {
-      toast.error(error.message || "Failed to delete cover letter");
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      toast.error(err.message || "Failed to delete cover letter");
     }
   };
 
@@ -54,7 +69,7 @@ export default function CoverLetterList({ coverLetters }) {
   return (
     <div className="space-y-4">
       {coverLetters.map((letter) => (
-        <Card key={letter.id} className="group relative ">
+        <Card key={letter.id} className="group relative">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
