@@ -24,15 +24,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { deleteCoverLetter } from "@/actions/cover-letter";
+// page.tsx
+import { CoverLetter } from "../types";  // Assuming types.ts is in the 'types' directory
+
 
 // ✅ Define the type of a single cover letter
-type CoverLetter = {
-  id: string;
-  jobTitle: string;
-  companyName: string;
-  jobDescription: string;
-  createdAt: string | Date;
-};
+
 
 // ✅ Props for the component
 type CoverLetterListProps = {

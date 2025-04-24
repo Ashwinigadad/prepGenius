@@ -3,19 +3,10 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CoverLetterList from "./_components/cover-letter-list";
 import { getCoverLetters } from "@/actions/cover-letter";
+// page.tsx
+import { CoverLetter } from "./types";  // Assuming types.ts is in the 'types' directory
 
-// Define the type inline here
-type CoverLetter = {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
-  content: string;
-  jobDescription: string | null;  // jobDescription as string only
-  companyName: string;
-  jobTitle: string;
-  status: string;
-};
+
 
 export default async function CoverLetterPage() {
   const coverLetters: CoverLetter[] = await getCoverLetters();
