@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -23,13 +23,13 @@ import useFetch from "@/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { resumeSchema } from "@/app/lib/schema";
-// import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
   const [previewContent, setPreviewContent] = useState(initialContent);
   const { user } = useUser();
   const [resumeMode, setResumeMode] = useState("preview");
+  const markdownRef = useRef(null);
 
   const {
     control,
@@ -56,14 +56,12 @@ export default function ResumeBuilder({ initialContent }) {
     error: saveError,
   } = useFetch(saveResume);
 
-  // Watch form fields for preview updates
   const formValues = watch();
 
   useEffect(() => {
     if (initialContent) setActiveTab("preview");
   }, [initialContent]);
 
-  // Update preview content when form values change
   useEffect(() => {
     if (activeTab === "edit") {
       const newContent = getCombinedContent();
@@ -71,7 +69,6 @@ export default function ResumeBuilder({ initialContent }) {
     }
   }, [formValues, activeTab]);
 
-  // Handle save result
   useEffect(() => {
     if (saveResult && !isSaving) {
       toast.success("Resume saved successfully!");
@@ -111,80 +108,54 @@ export default function ResumeBuilder({ initialContent }) {
   };
 
   const [isGenerating, setIsGenerating] = useState(false);
-  function sanitizeColors(element) {
-    if (!element) return;
-  
-    // Recursively traverse all elements inside the container
-    const elements = element.querySelectorAll("*");
-    elements.forEach((el) => {
-      const style = getComputedStyle(el);
-      
-      // Handle background color
-      if (style.backgroundColor && 
-          (style.backgroundColor.includes("oklch") || 
-           style.backgroundColor.includes("var(--") ||
-           style.backgroundColor.includes("hsl"))) {
-        el.style.backgroundColor = "#ffffff"; // Use hex format
-      }
-      
-      // Handle text color
-      if (style.color && 
-          (style.color.includes("oklch") || 
-           style.color.includes("var(--") ||
-           style.color.includes("hsl"))) {
-        el.style.color = "#000000"; // Use hex format
-      }
-      
-      // Handle border colors if needed
-      if (style.borderColor && 
-          (style.borderColor.includes("oklch") || 
-           style.borderColor.includes("var(--") ||
-           style.borderColor.includes("hsl"))) {
-        el.style.borderColor = "#dddddd"; // Use hex format
-      }
-    });
-  }
-  
-  
 
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
-      const element = document.getElementById("resume-pdf");
-      
-      // Clone the element to avoid modifying the original
-      const elementClone = element.cloneNode(true);
-      
-      // Sanitize colors in the cloned element
-      sanitizeColors(elementClone);
-      
-      // Create a temporary container
-      const tempContainer = document.createElement("div");
-      tempContainer.appendChild(elementClone);
-      tempContainer.style.position = "absolute";
-      tempContainer.style.left = "-9999px";
-      document.body.appendChild(tempContainer);
-      
-      const html2pdf = (await import("html2pdf.js")).default;
-  
-      const opt = {
-        margin: [15, 15],
-        filename: "resume.pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { 
-          scale: 2,
-          ignoreElements: (element) => {
-            // Ignore any elements that might cause issues
-            return false;
-          }
-        },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      };
-  
-      await html2pdf().set(opt).from(elementClone).save();
-      
-      // Clean up
-      document.body.removeChild(tempContainer);
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      // Add simple text content instead of HTML
+      const lines = previewContent
+        .replace(/<[^>]*>?/gm, '') // Remove HTML tags
+        .split('\n')
+        .filter(line => line.trim() !== '');
+
+      let y = 20;
+      const lineHeight = 7;
+      const pageHeight = doc.internal.pageSize.height - 20;
+
+      doc.setFont("helvetica");
+      doc.setFontSize(16);
+      doc.text(user.fullName || "Resume", 105, y, { align: "center" });
+      y += lineHeight * 2;
+
+      doc.setFontSize(12);
+      for (const line of lines) {
+        if (y > pageHeight) {
+          doc.addPage();
+          y = 20;
+        }
+        
+        // Handle section headers
+        if (line.startsWith('## ')) {
+          doc.setFontSize(14);
+          doc.setFont("helvetica", "bold");
+          doc.text(line.replace('## ', ''), 15, y);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(12);
+        } else {
+          doc.text(line, 15, y);
+        }
+        
+        y += lineHeight;
+      }
+
+      doc.save("resume.pdf");
     } catch (error) {
       console.error("PDF generation error:", error);
       toast.error("Failed to generate PDF. Please try again.");
@@ -192,14 +163,12 @@ export default function ResumeBuilder({ initialContent }) {
       setIsGenerating(false);
     }
   };
-  
-  
 
   const onSubmit = async (data) => {
     try {
       const formattedContent = previewContent
-        .replace(/\n/g, "\n") // Normalize newlines
-        .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines to double newlines
+        .replace(/\n/g, "\n")
+        .replace(/\n\s*\n/g, "\n\n")
         .trim();
 
       console.log(previewContent, formattedContent);
@@ -208,6 +177,7 @@ export default function ResumeBuilder({ initialContent }) {
       console.error("Save error:", error);
     }
   };
+
 
   return (
     <div data-color-mode="light" className="space-y-4">
