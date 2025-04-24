@@ -1,7 +1,11 @@
 import { BarLoader } from "react-spinners";
-import { Suspense } from "react";
+import { Suspense, ReactNode } from "react";
 
-export default function Layout({ children }) {
+interface LayoutProps {
+  children: ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
   return (
     <div className="px-5">
       <div className="flex items-center justify-between mb-5">

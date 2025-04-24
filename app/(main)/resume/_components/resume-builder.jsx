@@ -23,7 +23,7 @@ import useFetch from "@/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { resumeSchema } from "@/app/lib/schema";
-import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
+// import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -111,29 +111,88 @@ export default function ResumeBuilder({ initialContent }) {
   };
 
   const [isGenerating, setIsGenerating] = useState(false);
+  function sanitizeColors(element) {
+    if (!element) return;
+  
+    // Recursively traverse all elements inside the container
+    const elements = element.querySelectorAll("*");
+    elements.forEach((el) => {
+      const style = getComputedStyle(el);
+      
+      // Handle background color
+      if (style.backgroundColor && 
+          (style.backgroundColor.includes("oklch") || 
+           style.backgroundColor.includes("var(--") ||
+           style.backgroundColor.includes("hsl"))) {
+        el.style.backgroundColor = "#ffffff"; // Use hex format
+      }
+      
+      // Handle text color
+      if (style.color && 
+          (style.color.includes("oklch") || 
+           style.color.includes("var(--") ||
+           style.color.includes("hsl"))) {
+        el.style.color = "#000000"; // Use hex format
+      }
+      
+      // Handle border colors if needed
+      if (style.borderColor && 
+          (style.borderColor.includes("oklch") || 
+           style.borderColor.includes("var(--") ||
+           style.borderColor.includes("hsl"))) {
+        el.style.borderColor = "#dddddd"; // Use hex format
+      }
+    });
+  }
+  
+  
 
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
       const element = document.getElementById("resume-pdf");
-  
+      
+      // Clone the element to avoid modifying the original
+      const elementClone = element.cloneNode(true);
+      
+      // Sanitize colors in the cloned element
+      sanitizeColors(elementClone);
+      
+      // Create a temporary container
+      const tempContainer = document.createElement("div");
+      tempContainer.appendChild(elementClone);
+      tempContainer.style.position = "absolute";
+      tempContainer.style.left = "-9999px";
+      document.body.appendChild(tempContainer);
+      
       const html2pdf = (await import("html2pdf.js")).default;
   
       const opt = {
         margin: [15, 15],
         filename: "resume.pdf",
         image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { 
+          scale: 2,
+          ignoreElements: (element) => {
+            // Ignore any elements that might cause issues
+            return false;
+          }
+        },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       };
   
-      await html2pdf().set(opt).from(element).save();
+      await html2pdf().set(opt).from(elementClone).save();
+      
+      // Clean up
+      document.body.removeChild(tempContainer);
     } catch (error) {
       console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF. Please try again.");
     } finally {
       setIsGenerating(false);
     }
   };
+  
   
 
   const onSubmit = async (data) => {
@@ -244,12 +303,12 @@ export default function ResumeBuilder({ initialContent }) {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
-                    Twitter/X Profile
+                    GitHub URL
                   </label>
                   <Input
-                    {...register("contactInfo.twitter")}
+                    {...register("contactInfo.github")}
                     type="url"
-                    placeholder="https://twitter.com/your-handle"
+                    placeholder="https://github.com/username"
                   />
                   {errors.contactInfo?.twitter && (
                     <p className="text-sm text-red-500">
