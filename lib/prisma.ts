@@ -1,11 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+// Extend the globalThis type to include our prisma instance
+declare global {
+  var prisma: PrismaClient | undefined;
+}
 
-export const db =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: ["query", "error", "warn"],
-  });
+// Create a single PrismaClient instance or reuse the existing one during development
+export const db = globalThis.prisma ?? new PrismaClient();
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+// In development, store the instance in globalThis to avoid multiple instances during hot reloads
+if (process.env.NODE_ENV !== "production") {
+  globalThis.prisma = db;
+}
